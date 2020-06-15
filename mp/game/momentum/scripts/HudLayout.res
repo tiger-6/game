@@ -384,9 +384,6 @@
     HudConcTimer
     {
         "fieldName"		"HudConcTimer"
-        "pin_to_sibling" "HudSpeedMeter"
-        "pin_to_sibling_corner" "4"
-        "pin_corner_to_sibling" "6"
     }
 
     CHudStickybombs
