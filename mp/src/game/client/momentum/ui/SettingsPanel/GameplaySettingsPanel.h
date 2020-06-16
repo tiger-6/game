@@ -13,6 +13,8 @@ public:
 
     void OnCheckboxChecked(Panel *panel) override;
 
+    void OnTextChanged(Panel *pPanel, const char *pszText) override;
+
 private:
     // General gameplay settings
     vgui::CvarToggleCheckButton *m_pEnableDevConsole;
@@ -24,6 +26,9 @@ private:
     vgui::CvarToggleCheckButton *m_pSaveCheckpoints;
     vgui::CvarSlider *m_pYawSpeedSlider;
     vgui::CvarTextEntry *m_pYawSpeedEntry;
+
+    vgui::ComboBox *m_pRunSafeguardTypes;
+    vgui::ComboBox *m_pRunSafeguardModes;
 
     // Gamemode
     vgui::CvarToggleCheckButton *m_pRJEnableTrailParticle, *m_pRJEnableExplosionParticle, *m_pRJEnableShootSound,

@@ -7,6 +7,8 @@
 #include "vgui_controls/CvarToggleCheckButton.h"
 #include "vgui_controls/CvarComboBox.h"
 
+#include "run/mom_run_safeguards.h"
+
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
@@ -26,6 +28,19 @@ GameplaySettingsPanel::GameplaySettingsPanel(Panel *pParent, Button *pAssociate)
 
     m_pPlayBlockSound = new CvarToggleCheckButton(this, "PlayBlockSound", "#MOM_Settings_Play_BlockSound", "mom_bhop_playblocksound");
     m_pSaveCheckpoints = new CvarToggleCheckButton(this, "SaveCheckpoints", "#MOM_Settings_Save_Checkpoints", "mom_saveloc_save_between_sessions");
+
+    // Safeguard controls
+    m_pRunSafeguardTypes = new ComboBox(this, "RunSafeguardTypes", RUN_SAFEGUARD_COUNT, false);
+    m_pRunSafeguardTypes->AddItem("#MOM_Settings_Run_Safeguard_Types_1", nullptr);
+    m_pRunSafeguardTypes->AddItem("#MOM_Settings_Run_Safeguard_Types_2", nullptr);
+    m_pRunSafeguardTypes->AddItem("#MOM_Settings_Run_Safeguard_Types_3", nullptr);
+    m_pRunSafeguardTypes->AddItem("#MOM_Settings_Run_Safeguard_Types_4", nullptr);
+    m_pRunSafeguardTypes->SilentActivateItemByRow(0);
+
+    m_pRunSafeguardModes = new ComboBox(this, "RunSafeguardModes", RUN_SAFEGUARD_MODE_COUNT, false);
+    m_pRunSafeguardModes->AddItem("#MOM_Settings_Run_Safeguard_Modes_None", nullptr);
+    m_pRunSafeguardModes->AddItem("#MOM_Settings_Run_Safeguard_Modes_1", nullptr);
+    m_pRunSafeguardModes->AddItem("#MOM_Settings_Run_Safeguard_Modes_2", nullptr);
 
     // Gamemode specific settings
     // Rocket Jump controls
@@ -73,6 +88,8 @@ void GameplaySettingsPanel::OnPageShow()
     // Gamemode
     m_pSJStickyCounterAutohide->SetEnabled(m_pSJEnableStickyCounter->IsSelected());
     m_pSJChargeMeterUnits->SetEnabled(m_pSJEnableChargeMeter->IsSelected());
+    
+    m_pRunSafeguardModes->SilentActivateItemByRow(g_pRunSafeguards->GetModeFromType(m_pRunSafeguardTypes->GetCurrentItem()));
 }
 
 void GameplaySettingsPanel::OnCheckboxChecked(Panel *panel)
@@ -85,5 +102,17 @@ void GameplaySettingsPanel::OnCheckboxChecked(Panel *panel)
     else if (panel == m_pSJEnableChargeMeter)
     {
         m_pSJChargeMeterUnits->SetEnabled(m_pSJEnableChargeMeter->IsSelected());
+    }
+}
+
+void GameplaySettingsPanel::OnTextChanged(Panel* pPanel, const char* pszText)
+{
+    if (pPanel == m_pRunSafeguardTypes)
+    {
+        m_pRunSafeguardModes->SilentActivateItemByRow(g_pRunSafeguards->GetModeFromType(m_pRunSafeguardTypes->GetCurrentItem()));
+    }
+    else if (pPanel == m_pRunSafeguardModes)
+    {
+        g_pRunSafeguards->SetMode(m_pRunSafeguardTypes->GetCurrentItem(), m_pRunSafeguardModes->GetCurrentItem());
     }
 }
