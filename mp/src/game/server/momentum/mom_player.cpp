@@ -22,14 +22,12 @@
 #include "run/mom_replay_base.h"
 #include "mapzones.h"
 #include "fx_mom_shared.h"
+#include "run/mom_run_safeguards.h"
 
 #include "tier0/memdbgon.h"
 
 #define AVERAGE_STATS_INTERVAL 0.1
 #define SND_SPRINT "HL2Player.SprintStart"
-
-static MAKE_TOGGLE_CONVAR(mom_practice_safeguard, "1", FCVAR_ARCHIVE | FCVAR_REPLICATED,
-                          "Toggles the safeguard for enabling practice mode (not pressing any movement keys to enable). 0 = OFF, 1 = ON.\n");
 
 static MAKE_TOGGLE_CONVAR(mom_practice_warning_enable, "1", FCVAR_ARCHIVE | FCVAR_REPLICATED,
                           "Toggles the warning for enabling practice mode during a run. 0 = OFF, 1 = ON\n");
@@ -1704,7 +1702,7 @@ void CMomentumPlayer::StopSpectating()
 
 void CMomentumPlayer::TimerCommand_Restart(int track)
 {
-    if (!AllowUserTeleports())
+    if (!AllowUserTeleports() || g_pRunSafeguards->IsSafeguarded(RUN_SAFEGUARD_RESTART))
         return;
 
     g_pMomentumTimer->Stop(this);
@@ -1795,18 +1793,11 @@ void CMomentumPlayer::EnablePracticeMode()
     if (m_bHasPracticeMode)
         return;
 
+    if (g_pRunSafeguards->IsSafeguarded(RUN_SAFEGUARD_PRACTICEMODE))
+        return;
+
     if (g_pMomentumTimer->IsRunning())
     {
-        if (mom_practice_safeguard.GetBool())
-        {
-            const auto safeGuard = (m_nButtons & (IN_FORWARD | IN_MOVELEFT | IN_MOVERIGHT | IN_BACK | IN_JUMP | IN_DUCK | IN_WALK)) != 0;
-            if (safeGuard)
-            {
-                Warning("You cannot enable practice mode while moving when the timer is running! Toggle this with \"mom_practice_safeguard\"!\n");
-                return;
-            }
-        }
-
         if (mom_practice_warning_enable.GetBool())
         {
             UTIL_ShowMessage("PRACTICE_MODE_WARN", this);
