@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import re
 from dataclasses import dataclass
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -178,7 +179,25 @@ def scrape_prices() -> ScrapeResult:
     captured_responses = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        # Use PLAYWRIGHT_CHROMIUM_PATH env var or auto-detect installed browser
+        chromium_path = os.getenv("PLAYWRIGHT_CHROMIUM_PATH", "")
+        if not chromium_path:
+            # Auto-detect from Playwright cache
+            cache_dir = os.path.expanduser("~/.cache/ms-playwright")
+            if os.path.isdir(cache_dir):
+                for entry in sorted(os.listdir(cache_dir), reverse=True):
+                    if entry.startswith("chromium-"):
+                        candidate = os.path.join(cache_dir, entry, "chrome-linux", "chrome")
+                        if os.path.isfile(candidate):
+                            chromium_path = candidate
+                            break
+
+        launch_kwargs = {"headless": True}
+        if chromium_path:
+            launch_kwargs["executable_path"] = chromium_path
+            logger.info("Using Chromium at: %s", chromium_path)
+
+        browser = p.chromium.launch(**launch_kwargs)
         context = browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -263,6 +282,9 @@ def scrape_prices() -> ScrapeResult:
 
         except PlaywrightTimeout:
             logger.error("Timeout loading Eurostar search page")
+            all_trains = []
+        except Exception as exc:
+            logger.error("Failed to load page: %s", exc)
             all_trains = []
         finally:
             browser.close()
