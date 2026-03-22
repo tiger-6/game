@@ -102,6 +102,11 @@ mp/game/momentum/map_cache.dat
 mp/game/momentum/maps/*.bsp
 mp/game/momentum/custom/
 
+# Python
+__pycache__/
+*.pyc
+.env
+
 # Others
 *.cache
 *.jpg
